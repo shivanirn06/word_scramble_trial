@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Daily Challenge - Word Scramble</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Inter:wght@400;600&display=swap');
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Inter',sans-serif;
+    height:100vh;
+    background: linear-gradient(-45deg,#000000,#1e1b4b,#302b63,#0f0c29);
+    background-size:400% 400%;
+    animation: gradientMove 12s ease infinite;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+@keyframes gradientMove{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
+
+.game-card{
+    width:500px;
+    padding:50px;
+    border-radius:20px;
+    background:rgba(255,255,255,0.05);
+    backdrop-filter:blur(20px);
+    box-shadow:0 0 40px rgba(34,211,238,0.4);
+    text-align:center;
+    color:white;
+}
+
+.game-card h2{
+    font-family:'Orbitron',sans-serif;
+    letter-spacing:2px;
+    margin-bottom:10px;
+}
+
+.subtitle{
+    color:#94a3b8;
+    margin-bottom:20px;
+}
+
+.scrambled{
+    font-size:42px;
+    letter-spacing:12px;
+    margin:30px 0;
+    color:#7c3aed;
+    text-shadow:0 0 15px #7c3aed;
+}
+
+input{
+    width:100%;
+    padding:14px;
+    margin-bottom:20px;
+    border-radius:10px;
+    border:1px solid #22d3ee;
+    background:#1e1b4b;
+    color:white;
+    font-size:16px;
+}
+
+input:focus{
+    outline:none;
+    border-color:#7c3aed;
+    box-shadow:0 0 10px #7c3aed;
+}
+
+.btn-primary{
+    width:100%;
+    padding:14px;
+    border-radius:10px;
+    border:none;
+    background:#22d3ee;
+    color:#0f172a;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.3s;
+    box-shadow:0 0 15px rgba(34,211,238,0.6);
+}
+
+.btn-primary:hover{
+    background:#06b6d4;
+    box-shadow:0 0 25px rgba(34,211,238,1);
+}
+
+.back{
+    margin-top:20px;
+    display:inline-block;
+    color:#7c3aed;
+    text-decoration:none;
+}
+
+.back:hover{
+    text-shadow:0 0 10px #7c3aed;
+}
+</style>
+</head>
+
+<body>
+
+<div class="game-card">
+    <h2>⭐ DAILY CHALLENGE</h2>
+    <div class="subtitle">Only once per day. Make it count.</div>
+
+    <div class="scrambled">{{scrambled}}</div>
+
+    <form method="POST" action="/submit">
+        <input type="hidden" name="word" value="{{word}}">
+        <input name="answer" placeholder="Your answer..." required>
+        <button class="btn-primary">SUBMIT DAILY</button>
+    </form>
+
+    <a href="/dashboard" class="back">⬅ Back to Dashboard</a>
+</div>
+
+</body>
+</html>

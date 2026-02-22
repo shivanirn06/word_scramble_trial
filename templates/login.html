@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Login - Word Scramble</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Inter:wght@400;600&display=swap');
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Inter',sans-serif;
+    height:100vh;
+    background: linear-gradient(-45deg,#0f0c29,#302b63,#24243e,#000000);
+    background-size:400% 400%;
+    animation: gradientMove 10s ease infinite;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+@keyframes gradientMove{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
+
+.game-card{
+    width:420px;
+    padding:50px 40px;
+    border-radius:20px;
+    background:rgba(255,255,255,0.05);
+    backdrop-filter:blur(20px);
+    box-shadow:0 0 40px rgba(138,43,226,0.4);
+    text-align:center;
+    color:white;
+}
+
+.game-card h2{
+    font-family:'Orbitron',sans-serif;
+    font-size:28px;
+    margin-bottom:10px;
+    letter-spacing:2px;
+}
+
+.subtitle{
+    color:#cbd5e1;
+    margin-bottom:30px;
+    font-size:14px;
+}
+
+input{
+    width:100%;
+    padding:14px;
+    margin-bottom:18px;
+    border-radius:10px;
+    border:1px solid #7c3aed;
+    background:#1e1b4b;
+    color:white;
+    font-size:14px;
+}
+
+input:focus{
+    outline:none;
+    border-color:#22d3ee;
+    box-shadow:0 0 10px #22d3ee;
+}
+
+.btn-primary{
+    width:100%;
+    padding:14px;
+    border-radius:10px;
+    border:none;
+    background:#7c3aed;
+    color:white;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.3s;
+    box-shadow:0 0 15px rgba(124,58,237,0.6);
+}
+
+.btn-primary:hover{
+    background:#6d28d9;
+    box-shadow:0 0 25px rgba(124,58,237,1);
+}
+
+.divider{
+    margin:25px 0;
+    font-size:13px;
+    color:#94a3b8;
+}
+
+.btn-secondary{
+    width:100%;
+    padding:14px;
+    border-radius:10px;
+    border:2px solid #22d3ee;
+    background:transparent;
+    color:#22d3ee;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.btn-secondary:hover{
+    background:#22d3ee;
+    color:#0f172a;
+    box-shadow:0 0 20px #22d3ee;
+}
+
+a{
+    text-decoration:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="game-card">
+    <h2>🎮 WORD SCRAMBLE</h2>
+    <div class="subtitle">Login to enter the arena</div>
+
+    <form method="POST" action="/login">
+        <input name="username" placeholder="Username" required>
+        <input name="password" type="password" placeholder="Password" required>
+        <button class="btn-primary">LOGIN</button>
+    </form>
+
+    <div class="divider">OR</div>
+
+    <a href="/register">
+        <button class="btn-secondary">CREATE ACCOUNT</button>
+    </a>
+</div>
+
+</body>
+</html>

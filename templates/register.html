@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Register - Word Scramble</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Inter:wght@400;600&display=swap');
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Inter',sans-serif;
+    height:100vh;
+    background: linear-gradient(-45deg,#000000,#1e1b4b,#302b63,#0f0c29);
+    background-size:400% 400%;
+    animation: gradientMove 10s ease infinite;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+@keyframes gradientMove{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
+
+.game-card{
+    width:420px;
+    padding:50px 40px;
+    border-radius:20px;
+    background:rgba(255,255,255,0.05);
+    backdrop-filter:blur(20px);
+    box-shadow:0 0 40px rgba(34,211,238,0.4);
+    text-align:center;
+    color:white;
+}
+
+.game-card h2{
+    font-family:'Orbitron',sans-serif;
+    font-size:26px;
+    margin-bottom:10px;
+    letter-spacing:2px;
+}
+
+.subtitle{
+    color:#cbd5e1;
+    margin-bottom:30px;
+    font-size:14px;
+}
+
+input{
+    width:100%;
+    padding:14px;
+    margin-bottom:18px;
+    border-radius:10px;
+    border:1px solid #22d3ee;
+    background:#1e1b4b;
+    color:white;
+    font-size:14px;
+}
+
+input:focus{
+    outline:none;
+    border-color:#7c3aed;
+    box-shadow:0 0 10px #7c3aed;
+}
+
+.btn-primary{
+    width:100%;
+    padding:14px;
+    border-radius:10px;
+    border:none;
+    background:#22d3ee;
+    color:#0f172a;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.3s;
+    box-shadow:0 0 15px rgba(34,211,238,0.6);
+}
+
+.btn-primary:hover{
+    background:#06b6d4;
+    box-shadow:0 0 25px rgba(34,211,238,1);
+}
+
+.btn-secondary{
+    width:100%;
+    padding:14px;
+    border-radius:10px;
+    border:2px solid #7c3aed;
+    background:transparent;
+    color:#7c3aed;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.3s;
+    margin-top:20px;
+}
+
+.btn-secondary:hover{
+    background:#7c3aed;
+    color:white;
+    box-shadow:0 0 20px #7c3aed;
+}
+
+a{
+    text-decoration:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="game-card">
+    <h2>🕹 CREATE PLAYER</h2>
+    <div class="subtitle">Join the word battle</div>
+
+    <form method="POST" action="/create-account">
+        <input name="username" placeholder="Choose Username" required>
+        <input name="password" type="password" placeholder="Create Password" required>
+        <button class="btn-primary">REGISTER</button>
+    </form>
+
+    <a href="/">
+        <button class="btn-secondary">BACK TO LOGIN</button>
+    </a>
+</div>
+
+</body>
+</html>
