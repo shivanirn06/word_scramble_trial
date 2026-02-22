@@ -1,134 +1,136 @@
-from flask import Flask, render_template, request, redirect, session
+#!/usr/bin/env python3
+
+from flask import Flask, render_template, request, redirect, session, url_for
 import sqlite3
 import random
+import requests
 from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = "super_secret_key_change_this"
+app.secret_key = "supersecretkey"
 
-DB = "game.db"
+DB_FILE = "game.db"
 
-# =========================================================
-# DATABASE INITIALIZATION
-# =========================================================
+
+# =========================
+# DATABASE
+# =========================
+
+def get_db():
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
 
 def init_db():
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
 
-    # Users table
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            password TEXT
-        )
-    """)
+    c.execute('''CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE,
+                    password TEXT,
+                    total_score INTEGER DEFAULT 0,
+                    games_played INTEGER DEFAULT 0
+                )''')
 
-    # Game history table
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS games (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT,
-            word TEXT,
-            result TEXT,
-            score INTEGER,
-            date TEXT
-        )
-    """)
-
-    # Daily challenge table
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS daily (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            word TEXT,
-            date TEXT UNIQUE
-        )
-    """)
-
-    # Create today's daily challenge if not exists
-    today = str(datetime.now().date())
-    words = ["PYTHON", "FLASK", "DATABASE", "FUNCTION", "VARIABLE", "ALGORITHM"]
-
-    c.execute("SELECT * FROM daily WHERE date=?", (today,))
-    if not c.fetchone():
-        c.execute("INSERT INTO daily(word, date) VALUES (?, ?)",
-                  (random.choice(words), today))
+    c.execute('''CREATE TABLE IF NOT EXISTS games (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT,
+                    word TEXT,
+                    score INTEGER,
+                    played_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )''')
 
     conn.commit()
     conn.close()
 
 
-# =========================================================
-# HELPER FUNCTIONS
-# =========================================================
+# =========================
+# RANDOM WORD API
+# =========================
 
-def scramble(word):
+def get_random_word(difficulty):
+    length_map = {
+        "easy": 4,
+        "medium": 6,
+        "hard": 8
+    }
+
+    length = length_map.get(difficulty, 6)
+
+    try:
+        response = requests.get(
+            f"https://random-word-api.herokuapp.com/word?length={length}",
+            timeout=5
+        )
+
+        word = response.json()[0].upper()
+
+        if not word.isalpha():
+            return get_random_word(difficulty)
+
+        return word
+
+    except:
+        fallback = {
+            "easy": ["GAME", "PLAY", "WORD"],
+            "medium": ["PYTHON", "CODING", "PLAYER"],
+            "hard": ["ALGORITHM", "DATABASE", "FUNCTION"]
+        }
+        return random.choice(fallback[difficulty])
+
+
+def scramble_word(word):
     letters = list(word)
     random.shuffle(letters)
-    scrambled = ''.join(letters)
-
-    while scrambled == word:
-        random.shuffle(letters)
-        scrambled = ''.join(letters)
-
-    return scrambled
+    return ''.join(letters)
 
 
-# =========================================================
+def calculate_score(time_taken, difficulty):
+    base = {"easy": 50, "medium": 100, "hard": 150}
+    return base.get(difficulty, 100)
+
+
+# =========================
 # ROUTES
-# =========================================================
+# =========================
 
-# ---------------- HOME ----------------
 @app.route("/")
 def home():
-    if "user" in session:
-        return redirect("/dashboard")
     return render_template("login.html")
 
 
-# ---------------- REGISTER PAGE ----------------
 @app.route("/register")
 def register_page():
     return render_template("register.html")
 
 
-# ---------------- CREATE ACCOUNT ----------------
 @app.route("/create-account", methods=["POST"])
 def create_account():
-    username = request.form.get("username")
-    password = request.form.get("password")
+    username = request.form["username"]
+    password = request.form["password"]
 
-    if not username or not password:
-        return "Username and password required"
-
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
 
     try:
-        c.execute("INSERT INTO users(username, password) VALUES (?, ?)",
+        c.execute("INSERT INTO users (username, password) VALUES (?, ?)",
                   (username, password))
         conn.commit()
     except:
-        conn.close()
-        return "User already exists"
+        return "Username already exists!"
 
     conn.close()
-
-    session["user"] = username
-    return redirect("/dashboard")
+    return redirect(url_for("home"))
 
 
-# ---------------- LOGIN ----------------
 @app.route("/login", methods=["POST"])
 def login():
-    username = request.form.get("username")
-    password = request.form.get("password")
+    username = request.form["username"]
+    password = request.form["password"]
 
-    if not username or not password:
-        return "Username and password required"
-
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
 
     c.execute("SELECT * FROM users WHERE username=? AND password=?",
@@ -137,116 +139,111 @@ def login():
     conn.close()
 
     if user:
-        session["user"] = username
-        return redirect("/dashboard")
+        session["username"] = username
+        return redirect(url_for("dashboard"))
     else:
-        return "Invalid login credentials"
+        return "Invalid credentials"
 
 
-# ---------------- DASHBOARD ----------------
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("home"))
+
+
 @app.route("/dashboard")
 def dashboard():
-    if "user" not in session:
-        return redirect("/")
+    if "username" not in session:
+        return redirect(url_for("home"))
 
-    conn = sqlite3.connect(DB)
+    conn = get_db()
     c = conn.cursor()
-
-    c.execute("SELECT * FROM games WHERE username=? ORDER BY id DESC",
-              (session["user"],))
-    history = c.fetchall()
-
-    # Calculate total score
-    c.execute("SELECT SUM(score) FROM games WHERE username=?",
-              (session["user"],))
-    total_score = c.fetchone()[0]
-    total_score = total_score if total_score else 0
-
+    c.execute("SELECT total_score, games_played FROM users WHERE username=?",
+              (session["username"],))
+    user = c.fetchone()
     conn.close()
 
     return render_template("dashboard.html",
-                           user=session["user"],
-                           history=history,
-                           total_score=total_score)
+                           score=user["total_score"],
+                           games=user["games_played"])
 
 
-# ---------------- PLAY GAME ----------------
 @app.route("/game")
 def game():
-    if "user" not in session:
-        return redirect("/")
+    if "username" not in session:
+        return redirect(url_for("home"))
 
-    words = ["PYTHON", "FLASK", "DATABASE", "FUNCTION", "VARIABLE", "ALGORITHM"]
-    word = random.choice(words)
+    difficulty = request.args.get("difficulty", "easy")
+
+    word = get_random_word(difficulty)
+    scrambled = scramble_word(word)
+
+    session["current_word"] = word
+    session["difficulty"] = difficulty
 
     return render_template("game.html",
-                           scrambled=scramble(word),
-                           word=word)
+                           scrambled=scrambled,
+                           difficulty=difficulty)
 
 
-# ---------------- SUBMIT GAME ----------------
 @app.route("/submit", methods=["POST"])
 def submit():
-    if "user" not in session:
-        return redirect("/")
+    if "username" not in session:
+        return redirect(url_for("home"))
 
-    answer = request.form.get("answer", "").upper()
-    word = request.form.get("word", "").upper()
+    answer = request.form["answer"].upper()
+    correct_word = session.get("current_word")
+    difficulty = session.get("difficulty")
 
-    result = "Win" if answer == word else "Lose"
-    score = 10 if result == "Win" else 0
+    if not correct_word:
+        return redirect(url_for("dashboard"))
 
-    conn = sqlite3.connect(DB)
+    if answer == correct_word:
+        score = calculate_score(0, difficulty)
+        message = "Correct! 🎉"
+    else:
+        score = 0
+        message = f"Wrong! The word was {correct_word}"
+
+    conn = get_db()
     c = conn.cursor()
 
-    c.execute("""
-        INSERT INTO games(username, word, result, score, date)
-        VALUES (?, ?, ?, ?, ?)
-    """, (session["user"], word, result, score,
-          str(datetime.now().date())))
+    c.execute("UPDATE users SET total_score = total_score + ?, games_played = games_played + 1 WHERE username=?",
+              (score, session["username"]))
+
+    c.execute("INSERT INTO games (username, word, score) VALUES (?, ?, ?)",
+              (session["username"], correct_word, score))
 
     conn.commit()
     conn.close()
 
-    return redirect("/dashboard")
+    return render_template("result.html",
+                           message=message,
+                           score=score)
 
 
-# ---------------- DAILY CHALLENGE ----------------
 @app.route("/daily")
 def daily():
-    if "user" not in session:
-        return redirect("/")
+    if "username" not in session:
+        return redirect(url_for("home"))
 
-    today = str(datetime.now().date())
+    today = datetime.now().strftime("%Y-%m-%d")
+    random.seed(today)
 
-    conn = sqlite3.connect(DB)
-    c = conn.cursor()
+    word = get_random_word("medium")
+    scrambled = scramble_word(word)
 
-    c.execute("SELECT word FROM daily WHERE date=?", (today,))
-    row = c.fetchone()
-    conn.close()
-
-    if not row:
-        return "No daily challenge today"
-
-    word = row[0]
+    session["current_word"] = word
+    session["difficulty"] = "medium"
 
     return render_template("daily.html",
-                           scrambled=scramble(word),
-                           word=word)
+                           scrambled=scrambled)
 
 
-# ---------------- LOGOUT ----------------
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect("/")
-
-
-# =========================================================
+# =========================
 # MAIN
-# =========================================================
+# =========================
 
 if __name__ == "__main__":
     init_db()
-    app.run(debug=True)
+    app.run()
