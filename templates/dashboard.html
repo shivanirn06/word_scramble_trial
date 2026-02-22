@@ -184,16 +184,13 @@ tr:nth-child(even) {
 
     <div class="card">
         <p>Games Played</p>
-        <h2>{{history|length}}</h2>
+        <h2>{{history|length }}</h2>
     </div>
 
-    <div class="card">
-        <p>Wins</p>
-        <h2>
-            {% set wins = history | selectattr(3, 'equalto', 'Win') | list %}
-            {{ wins|length }}
-        </h2>
-    </div>
+   <div class="card">
+    <p>Wins</p>
+    <h2>{{ wins }}</h2>
+</div>
 </div>
 
 <div class="actions">

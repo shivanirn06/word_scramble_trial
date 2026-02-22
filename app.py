@@ -158,14 +158,38 @@ def dashboard():
 
     conn = get_db()
     c = conn.cursor()
-    c.execute("SELECT total_score, games_played FROM users WHERE username=?",
+
+    c.execute("SELECT total_score FROM users WHERE username=?",
               (session["username"],))
-    user = c.fetchone()
+    user_data = c.fetchone()
+
+    if not user_data:
+        conn.close()
+        return redirect(url_for("logout"))
+
+    c.execute("""
+        SELECT word,
+               CASE WHEN score > 0 THEN 'Win' ELSE 'Lose' END,
+               score,
+               played_at
+        FROM games
+        WHERE username=?
+        ORDER BY played_at DESC
+    """, (session["username"],))
+
+    rows = c.fetchall()
     conn.close()
 
+    # Convert to normal list (VERY IMPORTANT)
+    history = list(rows)
+
+    wins = len([g for g in history if g[1] == "Win"])
+
     return render_template("dashboard.html",
-                           score=user["total_score"],
-                           games=user["games_played"])
+                           user=session["username"],
+                           total_score=user_data["total_score"],
+                           history=history,
+                           wins=wins)
 
 
 @app.route("/game")
@@ -243,7 +267,7 @@ def daily():
 # =========================
 # MAIN
 # =========================
-
+init_db()
 if __name__ == "__main__":
-    init_db()
-    app.run()
+    app.run(debug=True)
+    
